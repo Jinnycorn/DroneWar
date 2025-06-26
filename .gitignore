@@ -1,0 +1,15 @@
+# 무시해야 할 것들
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+.vscode/
+.vs/
+*.sln
+*.opensdf
+*.sdf
+*.VC.db
+*.log
+*.user
+*.userprefs
