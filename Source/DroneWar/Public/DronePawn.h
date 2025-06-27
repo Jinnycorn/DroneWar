@@ -2,8 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-
-
+#include "PropellerComponent.h"
 #include "DronePawn.generated.h"
 
 
@@ -32,7 +31,14 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DroneMesh;
 
-	
+	UPROPERTY(VisibleAnywhere)
+	UPropellerComponent* PropellerFL;
+	UPROPERTY(VisibleAnywhere)
+	UPropellerComponent* PropellerFR;
+	UPROPERTY(VisibleAnywhere)
+	UPropellerComponent* PropellerBL;
+	UPROPERTY(VisibleAnywhere)
+	UPropellerComponent* PropellerBR;
 
 	void HoverUp();
 	void HoverDown();

@@ -34,12 +34,12 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//PlayerInputComponent->BindAction("HoverUp", IE_Pressed, this, &ADronePawn::HoverUp);
-	//PlayerInputComponent->BindAction("HoverDown", IE_Pressed, this, &ADronePawn::HoverDown);
-	//PlayerInputComponent->BindAction("Forward", IE_Pressed, this, &ADronePawn::MoveForward);
-	//PlayerInputComponent->BindAction("Backward", IE_Pressed, this, &ADronePawn::MoveBackward);
-	//PlayerInputComponent->BindAction("Left", IE_Pressed, this, &ADronePawn::MoveLeft);
-	//PlayerInputComponent->BindAction("Right", IE_Pressed, this, &ADronePawn::MoveRight);
+	/*PlayerInputComponent->BindAction("HoverUp", IE_Pressed, this, &ADronePawn::HoverUp);
+	PlayerInputComponent->BindAction("HoverDown", IE_Pressed, this, &ADronePawn::HoverDown);
+	PlayerInputComponent->BindAction("Forward", IE_Pressed, this, &ADronePawn::MoveForward);
+	PlayerInputComponent->BindAction("Backward", IE_Pressed, this, &ADronePawn::MoveBackward);
+	PlayerInputComponent->BindAction("Left", IE_Pressed, this, &ADronePawn::MoveLeft);
+	PlayerInputComponent->BindAction("Right", IE_Pressed, this, &ADronePawn::MoveRight);*/
 
 
 }
