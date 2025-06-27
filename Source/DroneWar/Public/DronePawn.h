@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+
+
 #include "DronePawn.generated.h"
+
 
 UCLASS()
 class DRONEWAR_API ADronePawn : public APawn
@@ -30,5 +31,15 @@ private:
 	// 드론 메시 및 물리
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DroneMesh;
+
+	
+
+	void HoverUp();
+	void HoverDown();
+	void MoveForward();
+	void MoveBackward();
+	void MoveLeft();
+	void MoveRight();
+
 
 };
