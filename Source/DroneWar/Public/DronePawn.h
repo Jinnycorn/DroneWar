@@ -3,6 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "PropellerComponent.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
+
 #include "DronePawn.generated.h"
 
 
@@ -31,21 +36,30 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DroneMesh;
 
-	UPROPERTY(VisibleAnywhere)
-	UPropellerComponent* PropellerFL;
-	UPROPERTY(VisibleAnywhere)
-	UPropellerComponent* PropellerFR;
-	UPROPERTY(VisibleAnywhere)
-	UPropellerComponent* PropellerBL;
-	UPROPERTY(VisibleAnywhere)
-	UPropellerComponent* PropellerBR;
+	// InputActions
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputMappingContext* DroneMappingContext;
 
-	void HoverUp();
-	void HoverDown();
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_HoverUp;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_HoverDown;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_MoveForward;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_MoveBackward;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_MoveLeft;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* IA_MoveRight;
+
+	UFUNCTION()
+	void HoverUp(const FInputActionInstance& Instance);
+	/*void HoverDown();
 	void MoveForward();
 	void MoveBackward();
 	void MoveLeft();
-	void MoveRight();
+	void MoveRight();*/
 
 
 };

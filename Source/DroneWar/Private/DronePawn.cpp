@@ -19,7 +19,14 @@ ADronePawn::ADronePawn()
 void ADronePawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(DroneMappingContext, 0);
+		}
+	}
 }
 
 // Called every frame
@@ -34,13 +41,22 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	/*PlayerInputComponent->BindAction("HoverUp", IE_Pressed, this, &ADronePawn::HoverUp);
-	PlayerInputComponent->BindAction("HoverDown", IE_Pressed, this, &ADronePawn::HoverDown);
-	PlayerInputComponent->BindAction("Forward", IE_Pressed, this, &ADronePawn::MoveForward);
-	PlayerInputComponent->BindAction("Backward", IE_Pressed, this, &ADronePawn::MoveBackward);
-	PlayerInputComponent->BindAction("Left", IE_Pressed, this, &ADronePawn::MoveLeft);
-	PlayerInputComponent->BindAction("Right", IE_Pressed, this, &ADronePawn::MoveRight);*/
+	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Triggered, this, &ADronePawn::HoverUp);
+	/*	EnhancedInput->BindAction(IA_HoverDown, ETriggerEvent::Triggered, this, &ADronePawn::HoverDown);
+		EnhancedInput->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ADronePawn::MoveForward);
+		EnhancedInput->BindAction(IA_MoveBackward, ETriggerEvent::Triggered, this, &ADronePawn::MoveBackward);
+		EnhancedInput->BindAction(IA_MoveLeft, ETriggerEvent::Triggered, this, &ADronePawn::MoveLeft);
+		EnhancedInput->BindAction(IA_MoveRight, ETriggerEvent::Triggered, this, &ADronePawn::MoveRight);*/
+	}
 
+
+}
+
+void ADronePawn::HoverUp(const FInputActionInstance& Instance)
+{
+	//입력을 받으면 받는 입력
 
 }
 
