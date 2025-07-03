@@ -13,6 +13,19 @@ ADronePawn::ADronePawn()
 
 	DroneMesh->SetSimulatePhysics(true);   // 물리 시뮬레이션
 	DroneMesh->SetEnableGravity(true);     // 중력 적용
+
+
+	FrontLeftPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("FrontLeft"));
+	FrontLeftPropeller->SetupAttachment(DroneMesh);
+
+	FrontRightPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("FrontRight"));
+	FrontRightPropeller->SetupAttachment(DroneMesh);
+
+	BackLeftPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("BackLeft"));
+	BackLeftPropeller->SetupAttachment(DroneMesh);
+
+	BackRightPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("BackRight"));
+	BackRightPropeller->SetupAttachment(DroneMesh);
 }
 
 // Called when the game starts or when spawned
@@ -27,6 +40,12 @@ void ADronePawn::BeginPlay()
 			Subsystem->AddMappingContext(DroneMappingContext, 0);
 		}
 	}
+
+	if (DroneMesh)
+	{
+		float Mass = DroneMesh->GetMass();            // 드론 메쉬의 물리 질량
+		HoverThrust = -GetWorld()->GetGravityZ() * Mass;
+	}
 }
 
 // Called every frame
@@ -34,6 +53,13 @@ void ADronePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 추력 점진적 증가
+	CurrentThrust = FMath::FInterpTo(CurrentThrust, TargetThrust, DeltaTime, InterpSpeed);
+
+	if (GetActorLocation().Z < MaxAltitude)
+	{
+		ApplyAllThrust();
+	}
 }
 
 // Called to bind functionality to input
@@ -54,9 +80,24 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 
+void ADronePawn::ApplyAllThrust()
+{
+	float PerPropellerThrust = CurrentThrust / 4.0f;
+	FrontLeftPropeller->ApplyThrust(PerPropellerThrust);
+	FrontRightPropeller->ApplyThrust(PerPropellerThrust);
+	BackLeftPropeller->ApplyThrust(PerPropellerThrust);
+	BackRightPropeller->ApplyThrust(PerPropellerThrust);
+}
+
+
 void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 {
-	//입력을 받으면 받는 입력
+	UE_LOG(LogTemp, Warning, TEXT("HoverUp Triggered"));
 
+	float InputValue = Instance.GetValue().Get<float>();
+	float AdditionalThrust = InputValue * (MaxThrust - HoverThrust);
+	TargetThrust = FMath::Clamp(HoverThrust + AdditionalThrust, 0.f, MaxThrust);
+
+	UE_LOG(LogTemp, Warning, TEXT("Input Value: %f"), InputValue);
 }
 

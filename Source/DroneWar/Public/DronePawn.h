@@ -24,6 +24,15 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//입력 함수
+	UFUNCTION()
+	void HoverUp(const FInputActionInstance& Instance);
+	/*void HoverDown();
+	void MoveForward();
+	void MoveBackward();
+	void MoveLeft();
+	void MoveRight();*/
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -35,6 +44,32 @@ private:
 	// 드론 메시 및 물리
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* DroneMesh;
+
+	// 프로펠러들
+	UPROPERTY()
+	UPropellerComponent* FrontLeftPropeller;
+	UPROPERTY()
+	UPropellerComponent* FrontRightPropeller;
+	UPROPERTY()
+	UPropellerComponent* BackLeftPropeller;
+	UPROPERTY()
+	UPropellerComponent* BackRightPropeller;
+
+	// 추력 계산
+	float HoverThrust = 0.f;
+	float CurrentThrust = 0.f;
+	float TargetThrust = 0.f;
+
+	UPROPERTY(EditAnywhere)
+	float InterpSpeed = 3.0f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxThrust = 2000.0f;
+
+	UPROPERTY(EditAnywhere)
+	float MaxAltitude = 300.0f;
+
+	void ApplyAllThrust();
 
 	// InputActions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -53,13 +88,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* IA_MoveRight;
 
-	UFUNCTION()
-	void HoverUp(const FInputActionInstance& Instance);
-	/*void HoverDown();
-	void MoveForward();
-	void MoveBackward();
-	void MoveLeft();
-	void MoveRight();*/
+
 
 
 };

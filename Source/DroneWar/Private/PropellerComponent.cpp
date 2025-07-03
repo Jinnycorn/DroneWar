@@ -19,5 +19,18 @@ UPropellerComponent::UPropellerComponent()
 	PropellerMesh->SetSimulatePhysics(false);
 }
 
+void UPropellerComponent::ApplyThrust(float Thrust)
+{
+	UStaticMeshComponent* Parent = Cast<UStaticMeshComponent>(GetAttachParent());
+	if (Parent && Parent->IsSimulatingPhysics())
+	{
+		FVector ForceDirection = GetUpVector();
+		FVector Force = ForceDirection * Thrust;
+		FVector Location = GetComponentLocation();
+
+		Parent->AddForceAtLocation(Force, Location);
+	}
+}
+
 
 

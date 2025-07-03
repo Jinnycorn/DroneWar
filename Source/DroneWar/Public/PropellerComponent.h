@@ -18,17 +18,11 @@ public:
 
 
     void SetThrust(float NewThrust);
-    void ApplyThrust(UPrimitiveComponent* ParentBody);
+    void ApplyThrust(float Thrust);
 
 protected:
     UPROPERTY(VisibleAnywhere, Category = "Mesh")
     UStaticMeshComponent* PropellerMesh;
-
-    UPROPERTY(EditAnywhere, Category = "Physics")
-    float ThrustPower = 0.0f;
-
-    UPROPERTY(EditAnywhere, Category = "Physics")
-    float MaxThrust = 200.0f;
 
 		
 };
