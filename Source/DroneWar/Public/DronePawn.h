@@ -73,7 +73,7 @@ private:
 
 	// InputActions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	UInputMappingContext* DroneMappingContext;
+	UInputMappingContext* IMC_DroneControls;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* IA_HoverUp;

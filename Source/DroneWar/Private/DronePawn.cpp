@@ -33,13 +33,29 @@ void ADronePawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	UE_LOG(LogTemp, Warning, TEXT("drone begin play "));
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	if (PC)
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		PC->Possess(this);
+		UE_LOG(LogTemp, Warning, TEXT("[드론] Possess 성공: %s"), *PC->GetName());
+
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+		if (Subsystem && IMC_DroneControls)  // IMC_DroneControls은 UPROPERTY로 선언된 매핑 컨텍스트
 		{
-			Subsystem->AddMappingContext(DroneMappingContext, 0);
+			Subsystem->AddMappingContext(IMC_DroneControls, 0);
+			
+			//UE_LOG(LogTemp, Warning, TEXT("IMC OK"));
+			
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("[드론] Possess 실패. GetController() = nullptr"));
+	}
+
 
 	if (DroneMesh)
 	{
@@ -67,6 +83,8 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UE_LOG(LogTemp, Warning, TEXT("SetupPlayerInputCOmp 호출"));
+
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Triggered, this, &ADronePawn::HoverUp);
@@ -82,7 +100,15 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void ADronePawn::ApplyAllThrust()
 {
+	if (!DroneMesh || !DroneMesh->IsSimulatingPhysics()) return;
+
 	float PerPropellerThrust = CurrentThrust / 4.0f;
+
+	// 총합 추력 Z 방향으로 적용 (드론 전체)
+	FVector UpwardForce = FVector(0.f, 0.f, PerPropellerThrust * 4.f);  // = CurrentThrust
+	DroneMesh->AddForce(UpwardForce);
+
+	// 각각의 프로펠러 비주얼 회전도 처리할 수 있음 (선택적)
 	FrontLeftPropeller->ApplyThrust(PerPropellerThrust);
 	FrontRightPropeller->ApplyThrust(PerPropellerThrust);
 	BackLeftPropeller->ApplyThrust(PerPropellerThrust);
