@@ -16,4 +16,17 @@ ADroneWarGameMode::ADroneWarGameMode()
 	//	//DefaultPawnClass = PlayerPawnBPClass.Class;
 	//	
 	//}
+
+	static ConstructorHelpers::FClassFinder<APawn> DronePawnBPClass(TEXT("/Game/Drone/BP_DronePawn"));
+	if (DronePawnBPClass.Class != nullptr)
+	{
+		DefaultPawnClass = DronePawnBPClass.Class;
+		UE_LOG(LogTemp, Warning, TEXT("Drone Pawn load Success"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Drone Pawn load Fail"));
+	}
+
+
 }

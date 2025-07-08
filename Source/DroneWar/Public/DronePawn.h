@@ -70,6 +70,7 @@ private:
 	float MaxAltitude = 300.0f;
 
 	void ApplyAllThrust();
+	void OnHoverUp();
 
 	// InputActions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -87,7 +88,6 @@ private:
 	UInputAction* IA_MoveLeft;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* IA_MoveRight;
-
 
 
 

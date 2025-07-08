@@ -33,14 +33,12 @@ void ADronePawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("drone begin play "));
-
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
 	if (PC)
 	{
 		PC->Possess(this);
-		UE_LOG(LogTemp, Warning, TEXT("[드론] Possess 성공: %s"), *PC->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("drone Possess succeed: %s"), *PC->GetName());
 
 		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 		if (Subsystem && IMC_DroneControls)  // IMC_DroneControls은 UPROPERTY로 선언된 매핑 컨텍스트
@@ -53,7 +51,7 @@ void ADronePawn::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("[드론] Possess 실패. GetController() = nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("drone Possess 실패. GetController() = nullptr"));
 	}
 
 
@@ -95,7 +93,10 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		EnhancedInput->BindAction(IA_MoveRight, ETriggerEvent::Triggered, this, &ADronePawn::MoveRight);*/
 	}
 
+	// 단순 키 입력만 바인딩
+	/*UE_LOG(LogTemp, Warning, TEXT("InputComponent Setting"));
 
+	PlayerInputComponent->BindAction("HoverUp", IE_Pressed, this, &ADronePawn::OnHoverUp);*/
 }
 
 void ADronePawn::ApplyAllThrust()
@@ -126,4 +127,3 @@ void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 
 	UE_LOG(LogTemp, Warning, TEXT("Input Value: %f"), InputValue);
 }
-
