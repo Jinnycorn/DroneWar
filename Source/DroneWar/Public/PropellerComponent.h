@@ -20,6 +20,11 @@ public:
     void SetThrust(float NewThrust);
     void ApplyThrust(float Thrust);
 
+	// Getter ÇÔ¼öµé
+	UStaticMeshComponent* GetPropellerMesh() const { return PropellerMesh; }
+
+	float GetMass() const;
+
 protected:
     UPROPERTY(VisibleAnywhere, Category = "Mesh")
     UStaticMeshComponent* PropellerMesh;

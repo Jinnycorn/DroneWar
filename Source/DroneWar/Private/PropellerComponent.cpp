@@ -32,5 +32,10 @@ void UPropellerComponent::ApplyThrust(float Thrust)
 	}
 }
 
+float UPropellerComponent::GetMass() const
+{
+	return PropellerMesh ? PropellerMesh->GetMass() : 0.f;
+}
+
 
 
