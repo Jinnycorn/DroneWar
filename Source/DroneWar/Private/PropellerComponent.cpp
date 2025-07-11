@@ -12,6 +12,8 @@ UPropellerComponent::UPropellerComponent()
 
 	// PropellerMesh 생성 및 부착
 	PropellerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PropellerMesh"));
+	check(PropellerMesh); // 죽더라도 확실하게 실패 포인트 찍음
+
 	PropellerMesh->SetupAttachment(this);
 
 	// 충돌, 물리 해제 (회전용 비주얼일 뿐)
@@ -21,21 +23,36 @@ UPropellerComponent::UPropellerComponent()
 
 void UPropellerComponent::ApplyThrust(float Thrust)
 {
-	UStaticMeshComponent* Parent = Cast<UStaticMeshComponent>(GetAttachParent());
-	if (Parent && Parent->IsSimulatingPhysics())
+	if (!PropellerMesh)
 	{
-		FVector ForceDirection = GetUpVector();
-		FVector Force = ForceDirection * Thrust;
-		FVector Location = GetComponentLocation();
-
-		Parent->AddForceAtLocation(Force, Location);
+		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] PropellerMesh is nullptr"));
+		return;
 	}
+
+	USceneComponent* AttachTarget = GetAttachParent();
+	if (!AttachTarget)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] AttachParent is nullptr"));
+		return;
+	}
+
+	UStaticMeshComponent* Parent = Cast<UStaticMeshComponent>(AttachTarget);
+	if (!Parent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] AttachParent is not UStaticMeshComponent"));
+		return;
+	}
+
+	if (!Parent->IsSimulatingPhysics())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[PropellerComponent] Parent is not simulating physics"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("UPropellerComponent::ApplyThrust"));
 }
 
-float UPropellerComponent::GetMass() const
-{
-	return PropellerMesh ? PropellerMesh->GetMass() : 0.f;
-}
+
 
 
 
