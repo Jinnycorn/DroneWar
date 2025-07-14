@@ -18,7 +18,8 @@ public:
 
 
     void SetThrust(float NewThrust);
-    void ApplyThrust(float Thrust);
+	UFUNCTION(BlueprintCallable, Category = "Thrust")
+	void ApplyThrust(float Thrust, UStaticMeshComponent* TargetMesh);
 
 
 

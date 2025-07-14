@@ -42,25 +42,29 @@ public:
 
 protected:
 	// 드론 메시 및 물리
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* DroneMesh;
 
 private:
 
-	// 프로펠러들
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Propeller", meta = (AllowPrivateAccess = "true"))
 	UPropellerComponent* FrontLeftPropeller;
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Propeller", meta = (AllowPrivateAccess = "true"))
 	UPropellerComponent* FrontRightPropeller;
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Propeller", meta = (AllowPrivateAccess = "true"))
 	UPropellerComponent* BackLeftPropeller;
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Propeller", meta = (AllowPrivateAccess = "true"))
 	UPropellerComponent* BackRightPropeller;
 
 	// 추력 계산
-	float HoverThrust = 0.f;
-	float CurrentThrust = 0.f;
-	float TargetThrust = 0.f;
+	//float HoverThrust = 0.f;
+	//float PerPropellerThrust = 0.f;
+	//float CurrentThrust = 0.f;
+	//float TargetThrust = 0.f;
+	//float TotalMass = 0.f;
 
 	UPROPERTY(EditAnywhere)
 	float InterpSpeed = 3.0f;

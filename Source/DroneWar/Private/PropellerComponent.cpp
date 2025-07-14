@@ -21,35 +21,24 @@ UPropellerComponent::UPropellerComponent()
 	PropellerMesh->SetSimulatePhysics(false);
 }
 
-void UPropellerComponent::ApplyThrust(float Thrust)
+void UPropellerComponent::ApplyThrust(float Thrust, UStaticMeshComponent* TargetMesh)
 {
-	if (!PropellerMesh)
+	if (!TargetMesh)
 	{
-		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] PropellerMesh is nullptr"));
+		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] TargetMesh is NULL"));
 		return;
 	}
 
-	USceneComponent* AttachTarget = GetAttachParent();
-	if (!AttachTarget)
+	if (!TargetMesh->IsSimulatingPhysics())
 	{
-		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] AttachParent is nullptr"));
+		UE_LOG(LogTemp, Warning, TEXT("[PropellerComponent] TargetMesh is not simulating physics"));
 		return;
 	}
 
-	UStaticMeshComponent* Parent = Cast<UStaticMeshComponent>(AttachTarget);
-	if (!Parent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] AttachParent is not UStaticMeshComponent"));
-		return;
-	}
+	FVector Force = FVector(0.f, 0.f, Thrust);
+	FVector Location = GetComponentLocation();
 
-	if (!Parent->IsSimulatingPhysics())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[PropellerComponent] Parent is not simulating physics"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("UPropellerComponent::ApplyThrust"));
+	TargetMesh->AddForceAtLocation(Force, Location);
 }
 
 

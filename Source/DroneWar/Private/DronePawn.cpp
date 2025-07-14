@@ -52,7 +52,7 @@ void ADronePawn::BeginPlay()
 		{
 			Subsystem->AddMappingContext(IMC_DroneControls, 0);
 			
-			//UE_LOG(LogTemp, Warning, TEXT("IMC OK"));
+			
 			
 		}
 	}
@@ -101,23 +101,44 @@ void ADronePawn::ApplyAllThrust()
 
 void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("HoverUp Triggered"));
+	
+	float TestThrust = 100000.f;
 
-	// 입력값 (0.0 ~ 1.0)
-	float InputValue = Instance.GetValue().Get<float>();
+	if (!DroneMesh)
+	{
+		UE_LOG(LogTemp, Error, TEXT("DroneMesh is NULL"));
+		return;
+	}
 
-	// 힘 증폭 (1.2배까지 허용)
-	float ScaledThrust = PerPropellerThrust * FMath::Clamp(InputValue * 1.2f, 0.f, 1.5f);
+	if (!FrontLeftPropeller || !FrontRightPropeller || !BackLeftPropeller || !BackRightPropeller)
+	{
+		UE_LOG(LogTemp, Error, TEXT("One or more PropellerComponents are NULL"));
+		return;
+	}
 
-	// 각 프로펠러에 AddForce 적용 (Z+ 방향으로)
-	FVector Force = FVector(0.f, 0.f, ScaledThrust);
+	UE_LOG(LogTemp, Warning, TEXT("Apply Test Thrust: %f"), TestThrust);
+
+	FrontLeftPropeller->ApplyThrust(TestThrust, DroneMesh);
+	FrontRightPropeller->ApplyThrust(TestThrust, DroneMesh);
+	BackLeftPropeller->ApplyThrust(TestThrust, DroneMesh);
+	BackRightPropeller->ApplyThrust(TestThrust, DroneMesh);
+
+
+	//// 입력값 (0.0 ~ 1.0)
+	//float InputValue = Instance.GetValue().Get<float>();
+
+	//// 힘 증폭 (1.2배까지 허용)
+	//float ScaledThrust = PerPropellerThrust * FMath::Clamp(InputValue * 1.2f, 0.f, 1.5f);
+
+	//// 각 프로펠러에 AddForce 적용 (Z+ 방향으로)
+	//FVector Force = FVector(0.f, 0.f, ScaledThrust);
 
 
 
-	//FrontLeftPropeller->ApplyThrust(PerPropellerThrust);
-	//FrontRightPropeller->ApplyThrust(PerPropellerThrust);
-	//BackLeftPropeller->ApplyThrust(PerPropellerThrust);
-	//BackRightPropeller->ApplyThrust(PerPropellerThrust);
+	////FrontLeftPropeller->ApplyThrust(PerPropellerThrust);
+	////FrontRightPropeller->ApplyThrust(PerPropellerThrust);
+	////BackLeftPropeller->ApplyThrust(PerPropellerThrust);
+	////BackRightPropeller->ApplyThrust(PerPropellerThrust);
 
-	UE_LOG(LogTemp, Warning, TEXT("Input: %f / Scaled Thrust: %f"), InputValue, ScaledThrust);
+	//UE_LOG(LogTemp, Warning, TEXT("Input: %f / Scaled Thrust: %f"), InputValue, ScaledThrust);
 }
