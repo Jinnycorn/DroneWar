@@ -27,6 +27,9 @@ protected:
 	//입력 함수
 	UFUNCTION()
 	void HoverUp(const FInputActionInstance& Instance);
+
+	UFUNCTION()
+	void HoverUpReleased(const FInputActionInstance& Instance);
 	/*void HoverDown();
 	void MoveForward();
 	void MoveBackward();
@@ -60,17 +63,21 @@ private:
 	UPropellerComponent* BackRightPropeller;
 
 	// 추력 계산
-	//float HoverThrust = 0.f;
-	//float PerPropellerThrust = 0.f;
-	//float CurrentThrust = 0.f;
-	//float TargetThrust = 0.f;
-	//float TotalMass = 0.f;
+	float GravityZ = -980.f;
+	float TotalMass = 1.f;
+	float HoverThrust = 0.f;
+	float PerPropellerThrust = 0.f;
+	float CurrentAltitude = 0.f;
+	float CurrentHoverPower = 0.f;
+
+	bool bHoverInputHeld = false;
+	bool bIsHoveringAllowed = true;
 
 	UPROPERTY(EditAnywhere)
-	float InterpSpeed = 3.0f;
+	float InterpSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere)
-	float MaxThrust = 2000.0f;
+	float MaxThrust = 5000.0f;
 
 	UPROPERTY(EditAnywhere)
 	float MaxAltitude = 300.0f;

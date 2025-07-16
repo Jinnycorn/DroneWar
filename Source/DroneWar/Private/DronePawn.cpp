@@ -1,13 +1,6 @@
 
 #include "DronePawn.h"
 
-
-// 추력 계산용 상수
-float GravityZ;
-float TotalMass;
-float HoverThrust;
-float PerPropellerThrust;
-
 // Sets default values
 ADronePawn::ADronePawn()
 {
@@ -33,12 +26,39 @@ ADronePawn::ADronePawn()
 
 	BackRightPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("BackRight"));
 	BackRightPropeller->SetupAttachment(DroneMesh);
+
+	GravityZ = -980.f;
+	TotalMass = 1.f;
+	HoverThrust = 0.f;
+	PerPropellerThrust = 20000.f;
+	CurrentAltitude = 0.f;
+	CurrentHoverPower = 0.f;
 }
 
 // Called when the game starts or when spawned
 void ADronePawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (DroneMesh)
+	{
+		GravityZ = GetWorld()->GetGravityZ();
+		TotalMass = DroneMesh->GetMass();
+		HoverThrust = -GravityZ * TotalMass;
+
+		PerPropellerThrust = HoverThrust * 1.05f / 4.f; // 마진을 살짝 더해 안정적인 호버링 유도
+		UE_LOG(LogTemp, Warning, TEXT("[Thrust Init] Gravity: %.2f, Mass: %.2f, HoverThrust: %.2f, PerPropeller: %.2f"), GravityZ, TotalMass, HoverThrust, PerPropellerThrust);
+	
+		DroneMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+	}
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Drone mass: %f"), TotalMass);
+	UE_LOG(LogTemp, Warning, TEXT("Gravity: %f"), GravityZ);
+	UE_LOG(LogTemp, Warning, TEXT("HoverThrust: %f"), HoverThrust);
+	UE_LOG(LogTemp, Warning, TEXT("PerPropellerThrust: %f"), PerPropellerThrust);
+
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 
@@ -51,9 +71,7 @@ void ADronePawn::BeginPlay()
 		if (Subsystem && IMC_DroneControls)  // IMC_DroneControls은 UPROPERTY로 선언된 매핑 컨텍스트
 		{
 			Subsystem->AddMappingContext(IMC_DroneControls, 0);
-			
-			
-			
+	
 		}
 	}
 	else
@@ -69,7 +87,51 @@ void ADronePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!DroneMesh) return;
+	CurrentAltitude = DroneMesh->GetComponentLocation().Z;
 
+	if (CurrentAltitude >= MaxAltitude)
+	{
+		bIsHoveringAllowed = false;
+	}
+	else
+	{
+		bIsHoveringAllowed = true;
+	}
+
+
+	// 점진적 호버링 구현
+	if (bIsHoveringAllowed && bHoverInputHeld)
+	{
+		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 1.f, DeltaTime, InterpSpeed); 
+	}
+	else
+	{
+		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 0.f, DeltaTime, InterpSpeed); 
+	}
+
+	float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower; 
+
+	UE_LOG(LogTemp, Warning, TEXT("[Tick] Alt: %.2f, Hovering: %s, HoverPower: %.2f, Thrust: %.2f"),
+		CurrentAltitude,
+		bIsHoveringAllowed ? TEXT("True") : TEXT("False"),
+		CurrentHoverPower,
+		HoverThrustScaled);
+
+	FrontLeftPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
+	FrontRightPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
+	BackLeftPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
+	BackRightPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
+
+
+	
+
+
+	/*CurrentAltitude = DroneMesh->GetComponentLocation().Z;
+	if (CurrentAltitude < MaxAltitude)
+	{
+		ApplyAllThrust();
+	}*/
 }
 
 // Called to bind functionality to input
@@ -81,6 +143,7 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Triggered, this, &ADronePawn::HoverUp);
+		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Completed, this, &ADronePawn::HoverUpReleased);
 	/*	EnhancedInput->BindAction(IA_HoverDown, ETriggerEvent::Triggered, this, &ADronePawn::HoverDown);
 		EnhancedInput->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ADronePawn::MoveForward);
 		EnhancedInput->BindAction(IA_MoveBackward, ETriggerEvent::Triggered, this, &ADronePawn::MoveBackward);
@@ -93,8 +156,11 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 void ADronePawn::ApplyAllThrust()
 {
-	if (!DroneMesh || !DroneMesh->IsSimulatingPhysics()) return;
-	UE_LOG(LogTemp, Warning, TEXT("ApplyThrust"));
+	float Thrust = FMath::Clamp(PerPropellerThrust, 0.f, MaxThrust);
+	FrontLeftPropeller->ApplyThrust(Thrust, DroneMesh);
+	FrontRightPropeller->ApplyThrust(Thrust, DroneMesh);
+	BackLeftPropeller->ApplyThrust(Thrust, DroneMesh);
+	BackRightPropeller->ApplyThrust(Thrust, DroneMesh);
 
 }
 
@@ -102,7 +168,8 @@ void ADronePawn::ApplyAllThrust()
 void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 {
 	
-	float TestThrust = 100000.f;
+	bHoverInputHeld = true;
+	/*float TestThrust = 1000.f;
 
 	if (!DroneMesh)
 	{
@@ -116,29 +183,24 @@ void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Apply Test Thrust: %f"), TestThrust);
 
-	FrontLeftPropeller->ApplyThrust(TestThrust, DroneMesh);
-	FrontRightPropeller->ApplyThrust(TestThrust, DroneMesh);
-	BackLeftPropeller->ApplyThrust(TestThrust, DroneMesh);
-	BackRightPropeller->ApplyThrust(TestThrust, DroneMesh);
+	float InputValue = Instance.GetValue().Get<float>();
+	float Thrust = PerPropellerThrust + (InputValue * MaxThrust);
+	Thrust = FMath::Clamp(Thrust, 0.f, MaxThrust);
 
+	FrontLeftPropeller->ApplyThrust(Thrust, DroneMesh);
+	FrontRightPropeller->ApplyThrust(Thrust, DroneMesh);
+	BackLeftPropeller->ApplyThrust(Thrust, DroneMesh);
+	BackRightPropeller->ApplyThrust(Thrust, DroneMesh);
 
-	//// 입력값 (0.0 ~ 1.0)
-	//float InputValue = Instance.GetValue().Get<float>();
-
-	//// 힘 증폭 (1.2배까지 허용)
-	//float ScaledThrust = PerPropellerThrust * FMath::Clamp(InputValue * 1.2f, 0.f, 1.5f);
-
-	//// 각 프로펠러에 AddForce 적용 (Z+ 방향으로)
-	//FVector Force = FVector(0.f, 0.f, ScaledThrust);
+	UE_LOG(LogTemp, Warning, TEXT("HoverUp Triggered - Thrust: %f"), Thrust);*/
 
 
+}
 
-	////FrontLeftPropeller->ApplyThrust(PerPropellerThrust);
-	////FrontRightPropeller->ApplyThrust(PerPropellerThrust);
-	////BackLeftPropeller->ApplyThrust(PerPropellerThrust);
-	////BackRightPropeller->ApplyThrust(PerPropellerThrust);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Input: %f / Scaled Thrust: %f"), InputValue, ScaledThrust);
+void ADronePawn::HoverUpReleased(const FInputActionInstance& Instance)
+{
+	bHoverInputHeld = false; 
+	DroneMesh->SetPhysicsLinearVelocity(DroneMesh->GetPhysicsLinearVelocity() * 0.5f); // 감속
+	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector); // 회전 제거
 }

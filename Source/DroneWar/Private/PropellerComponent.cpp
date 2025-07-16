@@ -23,22 +23,18 @@ UPropellerComponent::UPropellerComponent()
 
 void UPropellerComponent::ApplyThrust(float Thrust, UStaticMeshComponent* TargetMesh)
 {
-	if (!TargetMesh)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[PropellerComponent] TargetMesh is NULL"));
-		return;
-	}
+	if (!TargetMesh) return;
+	if (!TargetMesh->IsSimulatingPhysics()) return;
 
-	if (!TargetMesh->IsSimulatingPhysics())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[PropellerComponent] TargetMesh is not simulating physics"));
-		return;
-	}
-
-	FVector Force = FVector(0.f, 0.f, Thrust);
-	FVector Location = GetComponentLocation();
+	FVector Force = GetUpVector() * Thrust;
+	FVector Location = GetComponentLocation() + GetUpVector() * 5.f;
 
 	TargetMesh->AddForceAtLocation(Force, Location);
+
+	UE_LOG(LogTemp, Warning, TEXT("[Thrust] Amount: %.2f, Location: %s, Force: %s"),
+		Thrust,
+		*Location.ToString(),
+		*Force.ToString());
 }
 
 
