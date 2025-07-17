@@ -51,6 +51,11 @@ void ADronePawn::BeginPlay()
 	
 		DroneMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
 		DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+		DroneMesh->SetAngularDamping(10.f); // 회전 억제값 설정
+
+		DroneMesh->BodyInstance.bLockXRotation = true;
+		DroneMesh->BodyInstance.bLockYRotation = true;
+		DroneMesh->BodyInstance.bLockZRotation = true;
 	}
 
 
@@ -118,20 +123,12 @@ void ADronePawn::Tick(float DeltaTime)
 		CurrentHoverPower,
 		HoverThrustScaled);
 
-	FrontLeftPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
-	FrontRightPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
-	BackLeftPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
-	BackRightPropeller->ApplyThrust(HoverThrustScaled, DroneMesh);
+	FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
+	FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
+	BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
+	BackRightPropeller->ApplyThrust(HoverThrustScaled * BackRightScale, DroneMesh);
 
 
-	
-
-
-	/*CurrentAltitude = DroneMesh->GetComponentLocation().Z;
-	if (CurrentAltitude < MaxAltitude)
-	{
-		ApplyAllThrust();
-	}*/
 }
 
 // Called to bind functionality to input
@@ -144,9 +141,10 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 	{
 		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Triggered, this, &ADronePawn::HoverUp);
 		EnhancedInput->BindAction(IA_HoverUp, ETriggerEvent::Completed, this, &ADronePawn::HoverUpReleased);
-	/*	EnhancedInput->BindAction(IA_HoverDown, ETriggerEvent::Triggered, this, &ADronePawn::HoverDown);
+		//EnhancedInput->BindAction(IA_HoverDown, ETriggerEvent::Triggered, this, &ADronePawn::HoverDown);
 		EnhancedInput->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ADronePawn::MoveForward);
-		EnhancedInput->BindAction(IA_MoveBackward, ETriggerEvent::Triggered, this, &ADronePawn::MoveBackward);
+		EnhancedInput->BindAction(IA_MoveForward, ETriggerEvent::Completed, this, &ADronePawn::MoveForwardReleased);
+		/*	EnhancedInput->BindAction(IA_MoveBackward, ETriggerEvent::Triggered, this, &ADronePawn::MoveBackward);
 		EnhancedInput->BindAction(IA_MoveLeft, ETriggerEvent::Triggered, this, &ADronePawn::MoveLeft);
 		EnhancedInput->BindAction(IA_MoveRight, ETriggerEvent::Triggered, this, &ADronePawn::MoveRight);*/
 	}
@@ -169,33 +167,7 @@ void ADronePawn::HoverUp(const FInputActionInstance& Instance)
 {
 	
 	bHoverInputHeld = true;
-	/*float TestThrust = 1000.f;
-
-	if (!DroneMesh)
-	{
-		UE_LOG(LogTemp, Error, TEXT("DroneMesh is NULL"));
-		return;
-	}
-
-	if (!FrontLeftPropeller || !FrontRightPropeller || !BackLeftPropeller || !BackRightPropeller)
-	{
-		UE_LOG(LogTemp, Error, TEXT("One or more PropellerComponents are NULL"));
-		return;
-	}
-
-
-	float InputValue = Instance.GetValue().Get<float>();
-	float Thrust = PerPropellerThrust + (InputValue * MaxThrust);
-	Thrust = FMath::Clamp(Thrust, 0.f, MaxThrust);
-
-	FrontLeftPropeller->ApplyThrust(Thrust, DroneMesh);
-	FrontRightPropeller->ApplyThrust(Thrust, DroneMesh);
-	BackLeftPropeller->ApplyThrust(Thrust, DroneMesh);
-	BackRightPropeller->ApplyThrust(Thrust, DroneMesh);
-
-	UE_LOG(LogTemp, Warning, TEXT("HoverUp Triggered - Thrust: %f"), Thrust);*/
-
-
+	
 }
 
 void ADronePawn::HoverUpReleased(const FInputActionInstance& Instance)
@@ -203,4 +175,22 @@ void ADronePawn::HoverUpReleased(const FInputActionInstance& Instance)
 	bHoverInputHeld = false; 
 	DroneMesh->SetPhysicsLinearVelocity(DroneMesh->GetPhysicsLinearVelocity() * 0.5f); // 감속
 	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector); // 회전 제거
+}
+
+void ADronePawn::MoveForward(const FInputActionInstance& Instance)
+{
+	float InputValue = Instance.GetValue().Get<float>(); // 0 ~ 1
+	FrontLeftScale = FMath::Clamp(1.f - InputValue * 0.2f, 0.5f, 1.f); // 줄이기
+	FrontRightScale = FrontLeftScale;
+
+	BackLeftScale = FMath::Clamp(1.f + InputValue * 0.2f, 1.f, 1.5f); // 늘리기
+	BackRightScale = BackLeftScale;
+}
+
+void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance)
+{
+	FrontLeftScale = 1.f;
+	FrontRightScale = 1.f;
+	BackLeftScale = 1.f;
+	BackRightScale = 1.f;
 }

@@ -30,9 +30,15 @@ protected:
 
 	UFUNCTION()
 	void HoverUpReleased(const FInputActionInstance& Instance);
-	/*void HoverDown();
-	void MoveForward();
-	void MoveBackward();
+	//void HoverDown();
+
+	UFUNCTION()
+	void MoveForward(const FInputActionInstance& Instance);
+
+	UFUNCTION()
+	void MoveForwardReleased(const FInputActionInstance& Instance);
+
+	/*void MoveBackward();
 	void MoveLeft();
 	void MoveRight();*/
 
@@ -42,6 +48,21 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// 각 프로펠러별 힘 스케일
+	UPROPERTY(EditAnywhere, Category = "Thrust Scaling")
+	float FrontLeftScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "Thrust Scaling")
+	float FrontRightScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "Thrust Scaling")
+	float BackLeftScale = 1.f;
+
+	UPROPERTY(EditAnywhere, Category = "Thrust Scaling")
+	float BackRightScale = 1.f;
+
+
 
 protected:
 	// 드론 메시 및 물리
