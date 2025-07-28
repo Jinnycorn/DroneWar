@@ -83,6 +83,18 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Propeller", meta = (AllowPrivateAccess = "true"))
 	UPropellerComponent* BackRightPropeller;
 
+	// PID 제어 변수 추가
+	UPROPERTY(EditAnywhere, Category = "PID") float Kp = 9.8f; 
+	UPROPERTY(EditAnywhere, Category = "PID") float Ki = 0.98f;
+	UPROPERTY(EditAnywhere, Category = "PID") float Kd = 3.5f; 
+
+	UPROPERTY(EditAnywhere, Category = "PID") float TargetAltitude = 150.f; 
+
+	float PreviousError = 0.f; 
+	float Integral = 0.f; 
+
+	float ComputePID(float Target, float Current, float DeltaTime); 
+
 	// 추력 계산
 	float GravityZ = -980.f;
 	float TotalMass = 1.f;

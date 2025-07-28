@@ -95,34 +95,50 @@ void ADronePawn::Tick(float DeltaTime)
 	if (!DroneMesh) return;
 	CurrentAltitude = DroneMesh->GetComponentLocation().Z;
 
-	if (CurrentAltitude >= MaxAltitude)
-	{
-		bIsHoveringAllowed = false;
-	}
-	else
-	{
-		bIsHoveringAllowed = true;
-	}
+	////PID 제어 전
+	//if (CurrentAltitude >= MaxAltitude)
+	//{
+	//	bIsHoveringAllowed = false;
+	//}
+	//else
+	//{
+	//	bIsHoveringAllowed = true;
+	//}
 
 
-	// 점진적 호버링 구현
-	if (bIsHoveringAllowed && bHoverInputHeld)
-	{
-		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 1.f, DeltaTime, InterpSpeed); 
-	}
-	else
-	{
-		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 0.f, DeltaTime, InterpSpeed); 
-	}
+	//// 점진적 호버링 구현
+	//if (bIsHoveringAllowed && bHoverInputHeld)
+	//{
+	//	CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 1.f, DeltaTime, InterpSpeed); 
+	//}
+	//else
+	//{
+	//	CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 0.f, DeltaTime, InterpSpeed); 
+	//}
 
-	float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower; 
+	//float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower; 
 
-	UE_LOG(LogTemp, Warning, TEXT("[Tick] Alt: %.2f, Hovering: %s, HoverPower: %.2f, Thrust: %.2f"),
-		CurrentAltitude,
-		bIsHoveringAllowed ? TEXT("True") : TEXT("False"),
-		CurrentHoverPower,
-		HoverThrustScaled);
+	//UE_LOG(LogTemp, Warning, TEXT("[Tick] Alt: %.2f, Hovering: %s, HoverPower: %.2f, Thrust: %.2f"),
+	//	CurrentAltitude,
+	//	bIsHoveringAllowed ? TEXT("True") : TEXT("False"),
+	//	CurrentHoverPower,
+	//	HoverThrustScaled);
 
+	//FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
+	//FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
+	//BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
+	//BackRightPropeller->ApplyThrust(HoverThrustScaled * BackRightScale, DroneMesh);
+
+
+
+	// PID 제어
+	float PIDThrust = ComputePID(TargetAltitude, CurrentAltitude, DeltaTime);
+	float HoverThrustScaled = FMath::Clamp(PIDThrust, 0.f, MaxThrust);
+
+	UE_LOG(LogTemp, Warning, TEXT("[PID] Z: %.1f → %.1f | Error: %.1f | Output: %.1f"),
+		CurrentAltitude, TargetAltitude, TargetAltitude - CurrentAltitude, HoverThrustScaled);
+
+	// 균형있게 모든 프로펠러에 전달
 	FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
 	FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
 	BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
@@ -193,4 +209,19 @@ void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance)
 	FrontRightScale = 1.f;
 	BackLeftScale = 1.f;
 	BackRightScale = 1.f;
+}
+
+float ADronePawn::ComputePID(float Target, float Current, float DeltaTime)
+{
+	float Error = Target - Current;
+	Integral += Error * DeltaTime;
+
+	// Anti-windup (필요 시)
+	Integral = FMath::Clamp(Integral, -1000.f, 1000.f);
+
+	float Derivative = (Error - PreviousError) / DeltaTime;
+	PreviousError = Error;
+
+	float Output = Kp * Error + Ki * Integral + Kd * Derivative;
+	return Output;
 }
