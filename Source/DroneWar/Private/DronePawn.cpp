@@ -27,12 +27,6 @@ ADronePawn::ADronePawn()
 	BackRightPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("BackRight"));
 	BackRightPropeller->SetupAttachment(DroneMesh);
 
-	GravityZ = -980.f;
-	TotalMass = 1.f;
-	HoverThrust = 0.f;
-	PerPropellerThrust = 20000.f;
-	CurrentAltitude = 0.f;
-	CurrentHoverPower = 0.f;
 }
 
 // Called when the game starts or when spawned
@@ -131,14 +125,13 @@ void ADronePawn::Tick(float DeltaTime)
 
 
 
-	// PID 제어
-	float PIDThrust = ComputePID(TargetAltitude, CurrentAltitude, DeltaTime);
-	float HoverThrustScaled = FMath::Clamp(PIDThrust, 0.f, MaxThrust);
+	if (bHoverInputHeld)
+		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 1.f, DeltaTime, InterpSpeed);
+	else
+		CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 0.f, DeltaTime, InterpSpeed);
 
-	UE_LOG(LogTemp, Warning, TEXT("[PID] Z: %.1f → %.1f | Error: %.1f | Output: %.1f"),
-		CurrentAltitude, TargetAltitude, TargetAltitude - CurrentAltitude, HoverThrustScaled);
+	float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower;
 
-	// 균형있게 모든 프로펠러에 전달
 	FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
 	FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
 	BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
@@ -193,35 +186,15 @@ void ADronePawn::HoverUpReleased(const FInputActionInstance& Instance)
 	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector); // 회전 제거
 }
 
-void ADronePawn::MoveForward(const FInputActionInstance& Instance)
-{
-	float InputValue = Instance.GetValue().Get<float>(); // 0 ~ 1
-	FrontLeftScale = FMath::Clamp(1.f - InputValue * 0.2f, 0.5f, 1.f); // 줄이기
-	FrontRightScale = FrontLeftScale;
-
-	BackLeftScale = FMath::Clamp(1.f + InputValue * 0.2f, 1.f, 1.5f); // 늘리기
-	BackRightScale = BackLeftScale;
-}
-
-void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance)
-{
-	FrontLeftScale = 1.f;
-	FrontRightScale = 1.f;
-	BackLeftScale = 1.f;
-	BackRightScale = 1.f;
-}
+void ADronePawn::MoveForward(const FInputActionInstance& Instance) {}
+void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance) {}
 
 float ADronePawn::ComputePID(float Target, float Current, float DeltaTime)
 {
 	float Error = Target - Current;
 	Integral += Error * DeltaTime;
-
-	// Anti-windup (필요 시)
 	Integral = FMath::Clamp(Integral, -1000.f, 1000.f);
-
 	float Derivative = (Error - PreviousError) / DeltaTime;
 	PreviousError = Error;
-
-	float Output = Kp * Error + Ki * Integral + Kd * Derivative;
-	return Output;
+	return Kp * Error + Ki * Integral + Kd * Derivative;
 }
