@@ -105,6 +105,7 @@ private:
 
 	bool bHoverInputHeld = false;
 	bool bIsHoveringAllowed = true;
+	bool bForwardInputHeld = false;
 
 	UPROPERTY(EditAnywhere)
 	float InterpSpeed = 10.0f;

@@ -19,7 +19,7 @@ public:
 
     void SetThrust(float NewThrust);
 	UFUNCTION(BlueprintCallable, Category = "Thrust")
-	void ApplyThrust(float Thrust, UStaticMeshComponent* TargetMesh);
+	void ApplyThrust(float Thrust, UPrimitiveComponent* Target, FVector Direction = FVector::UpVector);
 
 
 

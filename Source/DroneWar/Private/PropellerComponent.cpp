@@ -21,20 +21,14 @@ UPropellerComponent::UPropellerComponent()
 	PropellerMesh->SetSimulatePhysics(false);
 }
 
-void UPropellerComponent::ApplyThrust(float Thrust, UStaticMeshComponent* TargetMesh)
+void UPropellerComponent::ApplyThrust(float Thrust, UPrimitiveComponent* Target, FVector Direction)
 {
-	if (!TargetMesh) return;
-	if (!TargetMesh->IsSimulatingPhysics()) return;
-
-	FVector Force = GetUpVector() * Thrust;
-	FVector Location = GetComponentLocation() + GetUpVector() * 5.f;
-
-	TargetMesh->AddForceAtLocation(Force, Location);
+	FVector Force = Direction * Thrust;
+	FVector Location = GetComponentLocation();
+	Target->AddForceAtLocation(Force, Location);
 
 	UE_LOG(LogTemp, Warning, TEXT("[Thrust] Amount: %.2f, Location: %s, Force: %s"),
-		Thrust,
-		*Location.ToString(),
-		*Force.ToString());
+		Thrust, *Location.ToString(), *Force.ToString());
 }
 
 

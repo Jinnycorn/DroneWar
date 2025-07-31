@@ -27,6 +27,8 @@ ADronePawn::ADronePawn()
 	BackRightPropeller = CreateDefaultSubobject<UPropellerComponent>(TEXT("BackRight"));
 	BackRightPropeller->SetupAttachment(DroneMesh);
 
+	bForwardInputHeld = false;
+
 }
 
 // Called when the game starts or when spawned
@@ -89,40 +91,6 @@ void ADronePawn::Tick(float DeltaTime)
 	if (!DroneMesh) return;
 	CurrentAltitude = DroneMesh->GetComponentLocation().Z;
 
-	////PID Á¦¾î Àü
-	//if (CurrentAltitude >= MaxAltitude)
-	//{
-	//	bIsHoveringAllowed = false;
-	//}
-	//else
-	//{
-	//	bIsHoveringAllowed = true;
-	//}
-
-
-	//// Á¡ÁøÀû È£¹ö¸µ ±¸Çö
-	//if (bIsHoveringAllowed && bHoverInputHeld)
-	//{
-	//	CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 1.f, DeltaTime, InterpSpeed); 
-	//}
-	//else
-	//{
-	//	CurrentHoverPower = FMath::FInterpTo(CurrentHoverPower, 0.f, DeltaTime, InterpSpeed); 
-	//}
-
-	//float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower; 
-
-	//UE_LOG(LogTemp, Warning, TEXT("[Tick] Alt: %.2f, Hovering: %s, HoverPower: %.2f, Thrust: %.2f"),
-	//	CurrentAltitude,
-	//	bIsHoveringAllowed ? TEXT("True") : TEXT("False"),
-	//	CurrentHoverPower,
-	//	HoverThrustScaled);
-
-	//FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
-	//FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
-	//BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
-	//BackRightPropeller->ApplyThrust(HoverThrustScaled * BackRightScale, DroneMesh);
-
 
 
 	if (bHoverInputHeld)
@@ -132,10 +100,20 @@ void ADronePawn::Tick(float DeltaTime)
 
 	float HoverThrustScaled = PerPropellerThrust * CurrentHoverPower;
 
-	FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontLeftScale, DroneMesh);
-	FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontRightScale, DroneMesh);
-	BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackLeftScale, DroneMesh);
-	BackRightPropeller->ApplyThrust(HoverThrustScaled * BackRightScale, DroneMesh);
+	float ForwardBias = bForwardInputHeld ? 0.5f : 0.f;
+	float FrontScale = 1.f - ForwardBias;
+	float BackScale = 1.f + ForwardBias;
+
+	
+	FVector ForwardVector = GetActorForwardVector();    // ¡ç Ãß°¡µÊ**
+	FVector UpVector = FVector::UpVector;               // ¡ç Ãß°¡µÊ**
+	FVector ForceDir_FLBR = (UpVector + ForwardVector * ForwardBias).GetSafeNormal(); // ¡ç Ãß°¡µÊ**
+	FVector ForceDir_FRBL = UpVector.GetSafeNormal();   // ¡ç Ãß°¡µÊ**
+
+	FrontLeftPropeller->ApplyThrust(HoverThrustScaled * FrontScale, DroneMesh, ForceDir_FRBL); // ¡ç º¯°æµÊ**
+	FrontRightPropeller->ApplyThrust(HoverThrustScaled * FrontScale, DroneMesh, ForceDir_FRBL); // ¡ç º¯°æµÊ**
+	BackLeftPropeller->ApplyThrust(HoverThrustScaled * BackScale, DroneMesh, ForceDir_FLBR);    // ¡ç º¯°æµÊ**
+	BackRightPropeller->ApplyThrust(HoverThrustScaled * BackScale, DroneMesh, ForceDir_FLBR);   // ¡ç º¯°æµÊ**
 
 
 }
@@ -161,13 +139,23 @@ void ADronePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 
 }
 
+
 void ADronePawn::ApplyAllThrust()
 {
-	float Thrust = FMath::Clamp(PerPropellerThrust, 0.f, MaxThrust);
-	FrontLeftPropeller->ApplyThrust(Thrust, DroneMesh);
-	FrontRightPropeller->ApplyThrust(Thrust, DroneMesh);
-	BackLeftPropeller->ApplyThrust(Thrust, DroneMesh);
-	BackRightPropeller->ApplyThrust(Thrust, DroneMesh);
+	float ForwardBias = bForwardInputHeld ? 0.5f : 0.f; 
+	float FrontScale = 1.f - ForwardBias;               
+	float BackScale = 1.f + ForwardBias;                
+
+	FVector ForwardVector = GetActorForwardVector();    
+	FVector UpVector = FVector::UpVector;               
+	FVector ForceDir_FLBR = (UpVector + ForwardVector * ForwardBias).GetSafeNormal(); 
+	FVector ForceDir_FRBL = UpVector.GetSafeNormal();   
+
+	float Thrust = FMath::Clamp(PerPropellerThrust, 0.f, MaxThrust); 
+	FrontLeftPropeller->ApplyThrust(Thrust * FrontScale, DroneMesh, ForceDir_FRBL);  
+	FrontRightPropeller->ApplyThrust(Thrust * FrontScale, DroneMesh, ForceDir_FRBL);
+	BackLeftPropeller->ApplyThrust(Thrust * BackScale, DroneMesh, ForceDir_FLBR);    
+	BackRightPropeller->ApplyThrust(Thrust * BackScale, DroneMesh, ForceDir_FLBR);  
 
 }
 
@@ -186,8 +174,16 @@ void ADronePawn::HoverUpReleased(const FInputActionInstance& Instance)
 	DroneMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector); // È¸Àü Á¦°Å
 }
 
-void ADronePawn::MoveForward(const FInputActionInstance& Instance) {}
-void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance) {}
+void ADronePawn::MoveForward(const FInputActionInstance& Instance)
+{
+	bForwardInputHeld = true;
+}
+
+void ADronePawn::MoveForwardReleased(const FInputActionInstance& Instance)
+{
+	bForwardInputHeld = false;
+}
+
 
 float ADronePawn::ComputePID(float Target, float Current, float DeltaTime)
 {
